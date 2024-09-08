@@ -9,57 +9,56 @@ class FileProcessor {
     this.destinationDir = destinationDir;
   }
 
-  readInChunksAndWriteToFileSystem() {    
-    const readStream = fs.createReadStream(
-      this.filePath, 
-      { highWaterMark: this.chunkSize }
-    )
-    let chunksReadCount = 0
-  
-    // on availability of data for CHUNK length
-    // - read data
-    // - console log data
-    readStream.on("data", (chunk) => {
-      console.log(`recevied ${chunk.length} data...`)
-      console.log(chunk)
-      console.log(chunk.toString())
+  chunk() {    
+    return new Promise( (resolve, reject) => {
 
-      console.log("saving to chunk destination dir")
-      const chunkDestFileName = `${this.destinationDir}_chunk_${chunksReadCount}`
-      const chunkFileDestPath = path.join(__dirname, chunkDestFileName);
-      
-      fs.open(chunkDestFileName, "w", (err, fd) => {
-        console.log("fd = ", fd, chunksReadCount)
+      const readStream = fs.createReadStream(
+        this.filePath, 
+        { highWaterMark: this.chunkSize }
+      )
+      let chunksReadCount = 0
+    
+      // on availability of data for CHUNK length
+      // - read data
+      // - console log data
+      readStream.on("data", (chunk) => {
+        console.log(`recevied ${chunk.length} data...`)
+        console.log(chunk)
+        console.log(chunk.toString())
+  
+        console.log("saving to chunk destination dir")
+        const chunkDestFileName = `${this.destinationDir}_chunk_${chunksReadCount}`
+        const chunkFileDestPath = path.join(__dirname, chunkDestFileName);
         
-        fs.writeFile(fd, chunk, (error) => {
-          if(error) {
-            console.log(`error writing to file ${chunkFileDestPath}`)
-          } else {
-            console.log(`writing to ${chunkFileDestPath} is complete.`)
-
-            fs.close(fd, (err) => {
-              if(err) {
-                console.log(`!!!!!! error in closing file ${chunkFileDestPath}`)
-              } else {
-                console.log(`closed file ${chunkFileDestPath}`)
-              }
-            }) 
-          }
+        fs.open(chunkDestFileName, "w", (err, fd) => {
+          console.log("fd = ", fd, chunksReadCount)
+          
+          fs.writeFile(fd, chunk, (error) => {
+            if(error) {
+              console.log(`error writing to file ${chunkFileDestPath}`)
+            } else {
+              console.log(`writing to ${chunkFileDestPath} is complete.`)
+  
+              fs.close(fd, (err) => {
+                if(err) {
+                  console.log(`!!!!!! error in closing file ${chunkFileDestPath}`)
+                } else {
+                  console.log(`closed file ${chunkFileDestPath}`)
+                }
+              }) 
+            }
+          })
         })
+  
+        chunksReadCount++
       })
-
-      chunksReadCount++
+    
+      readStream.on('end', () => {
+        console.log('Finished reading the file');
+  
+        resolve({status: true})
+      });
     })
-  
-    readStream.on('end', () => {
-      console.log('Finished reading the file');
-
-      return Promise.resolve({status: true})
-    });
-  }
-  
-  async chunk() {
-    this.readInChunksAndWriteToFileSystem()
   }
   
   read() {
