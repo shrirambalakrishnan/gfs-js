@@ -26,11 +26,11 @@ class FileProcessor {
         console.log(chunk)
         console.log(chunk.toString())
   
-        console.log("saving to chunk destination dir")
-        const chunkDestFileName = `${this.destinationDir}_chunk_${chunksReadCount}`
-        const chunkFileDestPath = path.join(__dirname, chunkDestFileName);
+        const chunkDestFileName = `chunk_${chunksReadCount}`
+        const chunkFileDestPath = path.join(__dirname, this.destinationDir, chunkDestFileName);
+        console.log("saving to chunk destination dir - ", chunkFileDestPath)
         
-        fs.open(chunkDestFileName, "w", (err, fd) => {
+        fs.open(chunkFileDestPath, "w", (err, fd) => {
           console.log("fd = ", fd, chunksReadCount)
           
           fs.writeFile(fd, chunk, (error) => {
@@ -65,14 +65,14 @@ class FileProcessor {
     
     console.log("read starts")
     
-    const chunkCombinedDestFileName = `${this.destinationDir}_chunk_combined`
-    const chunkCombinedPath = path.join(__dirname, chunkCombinedDestFileName)
+    const chunkCombinedDestFileName = `chunk_combined`
+    const chunkCombinedPath = path.join(__dirname, this.destinationDir, chunkCombinedDestFileName)
 
     function readChunkAndWriteToCombinedFile(chunkIdentifier, combinedFileFD, destinationDir) {
       console.log("~~~~~~~~~~~~~~~~~~~ starting readChunkAndWriteToCombinedFile...", chunkIdentifier, combinedFileFD)
       
-      let chunkSourceFileName = `${destinationDir}_chunk_${chunkIdentifier}`
-      let chunkSourceFilePath = path.join(__dirname, chunkSourceFileName)
+      let chunkSourceFileName = `chunk_${chunkIdentifier}`
+      let chunkSourceFilePath = path.join(__dirname, destinationDir, chunkSourceFileName)
 
       console.log("chunkCombinedDestFileName = ", chunkCombinedDestFileName)
       console.log("chunkCombinedPath = ", chunkCombinedPath)
