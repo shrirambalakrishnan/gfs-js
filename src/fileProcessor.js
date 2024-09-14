@@ -1,16 +1,23 @@
 const fs = require("node:fs");
 const path = require("path");
 
+const { uuid } = require('uuidv4');
+
 class FileProcessor {
 
-  constructor(filePath, chunkSize, destinationDir) {
-    this.filePath = path.join(__dirname, filePath);
+  constructor(fileName, chunkSize, destinationDir, masterFilesCollection) {
+    this.fileName = fileName;
+    this.filePath = path.join(__dirname, fileName);
     this.chunkSize = chunkSize;
     this.destinationDir = destinationDir;
+    this.masterFilesCollection = masterFilesCollection;
   }
 
   chunk() {    
+    const chunksInserted = []
     return new Promise( (resolve, reject) => {
+      let ongoingChunkingCount = 0
+      let readingInChunksEnded = false
 
       const readStream = fs.createReadStream(
         this.filePath, 
@@ -22,27 +29,44 @@ class FileProcessor {
       // - read data
       // - console log data
       readStream.on("data", (chunk) => {
+        ongoingChunkingCount++
+        
         console.log(`recevied ${chunk.length} data...`)
         console.log(chunk)
         console.log(chunk.toString())
+        const chunkIdentifier = uuid();
   
-        const chunkDestFileName = `chunk_${chunksReadCount}`
+        const chunkDestFileName = `chunk_${chunkIdentifier}`
         const chunkFileDestPath = path.join(__dirname, this.destinationDir, chunkDestFileName);
         console.log("saving to chunk destination dir - ", chunkFileDestPath)
         
         fs.open(chunkFileDestPath, "w", (err, fd) => {
           console.log("fd = ", fd, chunksReadCount)
           
+          chunksInserted.push( chunkIdentifier )
+          console.log("pushed chunkidentifier to chunksInserted - ", chunkIdentifier)
+
           fs.writeFile(fd, chunk, (error) => {
             if(error) {
               console.log(`error writing to file ${chunkFileDestPath}`)
             } else {
               console.log(`writing to ${chunkFileDestPath} is complete.`)
   
+              ongoingChunkingCount--
+              
               fs.close(fd, (err) => {
                 if(err) {
                   console.log(`!!!!!! error in closing file ${chunkFileDestPath}`)
                 } else {
+
+                  if(
+                    readingInChunksEnded &&
+                    ongoingChunkingCount == 0
+                  ) {
+                    this.masterFilesCollection[this.filePath] = chunksInserted
+                    resolve({status: true, chunksInserted})
+                  }
+                  
                   console.log(`closed file ${chunkFileDestPath}`)
                 }
               }) 
@@ -54,9 +78,13 @@ class FileProcessor {
       })
     
       readStream.on('end', () => {
+        readingInChunksEnded = true
         console.log('Finished reading the file');
   
-        resolve({status: true})
+        if(readingInChunksEnded && ongoingChunkingCount == 0) {
+          this.masterFilesCollection[this.filePath] = chunksInserted
+          resolve({status: true, chunksInserted})
+        }
       });
     })
   }
@@ -65,13 +93,19 @@ class FileProcessor {
     
     console.log("read starts")
     
-    const chunkCombinedDestFileName = `chunk_combined`
+    const chunkCombinedDestFileName = `chunk_combined_${this.fileName}`
     const chunkCombinedPath = path.join(__dirname, this.destinationDir, chunkCombinedDestFileName)
 
-    function readChunkAndWriteToCombinedFile(chunkIdentifier, combinedFileFD, destinationDir) {
-      console.log("~~~~~~~~~~~~~~~~~~~ starting readChunkAndWriteToCombinedFile...", chunkIdentifier, combinedFileFD)
+    function readChunkAndAppendToCombinedFile(fileChunks, chunkIndexToProcess, combinedFileFD, destinationDir) {
+      console.log("~~~~~~~~~~~~~~~~~~~ starting readChunkAndWriteToCombinedFile...", chunkIndexToProcess, combinedFileFD)
+
+      if(chunkIndexToProcess >= fileChunks.length) {
+        return
+      }
       
-      let chunkSourceFileName = `chunk_${chunkIdentifier}`
+      const chunkToProcess = fileChunks[chunkIndexToProcess]
+      
+      let chunkSourceFileName = `chunk_${chunkToProcess}`
       let chunkSourceFilePath = path.join(__dirname, destinationDir, chunkSourceFileName)
 
       console.log("chunkCombinedDestFileName = ", chunkCombinedDestFileName)
@@ -89,15 +123,19 @@ class FileProcessor {
             console.error(err)
             console.log("Unable to append to path. breaking...")
           }
-          chunkIdentifier++
-          readChunkAndWriteToCombinedFile(chunkIdentifier, combinedFileFD, destinationDir)
+          
+          chunkIndexToProcess++
+          readChunkAndAppendToCombinedFile(fileChunks, chunkIndexToProcess, combinedFileFD, destinationDir)
         })
       })
       
     }
+
     fs.open(chunkCombinedPath, "a", (err, fd) => {
       console.log("chunkCombinedPath.fd = ", fd)
-      readChunkAndWriteToCombinedFile(0, fd, this.destinationDir)
+      const chunkIndexToProcess = 0
+      readChunkAndAppendToCombinedFile( this.masterFilesCollection[ this.filePath ], chunkIndexToProcess, fd, this.destinationDir )
+      
     })    
   }
 }
