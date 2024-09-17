@@ -5,12 +5,12 @@ const { uuid } = require('uuidv4');
 
 class FileProcessor {
 
-  constructor(fileName, chunkSize, destinationDir, masterFilesCollection) {
+  constructor(fileName, chunkSize, destinationDir, masterServer) {
     this.fileName = fileName;
     this.filePath = path.join(__dirname, fileName);
     this.chunkSize = chunkSize;
     this.destinationDir = destinationDir;
-    this.masterFilesCollection = masterFilesCollection;
+    this.masterServer = masterServer;
   }
 
   chunk() {    
@@ -52,6 +52,9 @@ class FileProcessor {
             } else {
               console.log(`writing to ${chunkFileDestPath} is complete.`)
   
+              const opLogString = `CHUNK_CREATED|${this.filePath}|${chunkIdentifier}|${chunkFileDestPath}\n`
+              this.masterServer.logOperation(opLogString)
+
               ongoingChunkingCount--
               
               fs.close(fd, (err) => {
@@ -63,7 +66,7 @@ class FileProcessor {
                     readingInChunksEnded &&
                     ongoingChunkingCount == 0
                   ) {
-                    this.masterFilesCollection[this.filePath] = chunksInserted
+                    this.masterServer.filesCollection[this.filePath] = chunksInserted
                     resolve({status: true, chunksInserted})
                   }
                   
@@ -82,7 +85,7 @@ class FileProcessor {
         console.log('Finished reading the file');
   
         if(readingInChunksEnded && ongoingChunkingCount == 0) {
-          this.masterFilesCollection[this.filePath] = chunksInserted
+          this.masterServer.filesCollection[this.filePath] = chunksInserted
           resolve({status: true, chunksInserted})
         }
       });
@@ -134,7 +137,7 @@ class FileProcessor {
     fs.open(chunkCombinedPath, "a", (err, fd) => {
       console.log("chunkCombinedPath.fd = ", fd)
       const chunkIndexToProcess = 0
-      readChunkAndAppendToCombinedFile( this.masterFilesCollection[ this.filePath ], chunkIndexToProcess, fd, this.destinationDir )
+      readChunkAndAppendToCombinedFile( this.masterServer.filesCollection[ this.filePath ], chunkIndexToProcess, fd, this.destinationDir )
       
     })    
   }

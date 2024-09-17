@@ -1,4 +1,6 @@
 .DS_Store
 
 src/chunks
+src/*-oplog-*
+
 node_modules

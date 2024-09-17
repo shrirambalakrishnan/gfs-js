@@ -1,9 +1,8 @@
 const { FileProcessor } = require("./fileProcessor")
+const { MasterServer } = require("./masterServer")
 
 const fs = require("fs")
 const path = require("path")
-
-const filesCollection = {}
 
 const init = () => {
   return new Promise( (resolve, reject) => {
@@ -26,19 +25,22 @@ const main = () => {
     }
 
     const sourceFilePath = "sourceFile.md"
-    const fileProcessor = new FileProcessor(sourceFilePath, 100, "chunks", filesCollection)
+    const masterServer = new MasterServer()
+    console.log("masterServer.filesCollection = ", masterServer.filesCollection) 
+    
+    const fileProcessor = new FileProcessor(sourceFilePath, 100, "chunks", masterServer)
     fileProcessor.chunk().then(res => {
       if(res.status) {
         console.log("res.chunksInserted = ", res.chunksInserted)
         console.log("res.chunksInserted.length = ", res.chunksInserted.length)
-        // filesCollection[sourceFilePath] = res.chunksInserted
-        
-        console.log("filesCollection = ", filesCollection)
+        console.log("filesCollection = ", masterServer.filesCollection)
 
-        fileProcessor.read(filesCollection[sourceFilePath])
+        fileProcessor.read(masterServer.filesCollection[sourceFilePath])
       }
     })
-    
+
+    // // Independently read chunks based on the state stored in "op logs"
+    // fileProcessor.read(masterServer.filesCollection[sourceFilePath])
   })
   
   
