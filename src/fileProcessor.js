@@ -137,8 +137,7 @@ class FileProcessor {
     fs.open(chunkCombinedPath, "a", (err, fd) => {
       console.log("chunkCombinedPath.fd = ", fd)
       const chunkIndexToProcess = 0
-      readChunkAndAppendToCombinedFile( this.masterServer.filesCollection[ this.filePath ], chunkIndexToProcess, fd, this.destinationDir )
-      
+      readChunkAndAppendToCombinedFile( this.masterServer.filesCollection[ this.filePath ], chunkIndexToProcess, fd, this.destinationDir )     
     })    
   }
 }
