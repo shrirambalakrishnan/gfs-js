@@ -1,49 +1,25 @@
-const { FileProcessor } = require("./fileProcessor")
 const { MasterServer } = require("./masterServer")
-
-const fs = require("fs")
-const path = require("path")
-
-const init = () => {
-  return new Promise( (resolve, reject) => {
-    const chunksFolderName = "chunks"
-    const chunksPath = path.join(__dirname, chunksFolderName)
-    
-    fs.rmSync(chunksPath, { recursive: true, force: true })
-    fs.mkdirSync(chunksPath)
-    resolve( true )
-  })
-}
+const { ChunkServer } = require("./chunkServer")
 
 const main = () => {
 
-  init().then( res => {
+  // init master server
+  const masterServer = new MasterServer()
+  console.log("masterServer.filesCollection = ", masterServer.filesCollection)
 
-    if(!res) {
-      console.error("init failed..")
-      return
-    }
+  // init chunk server 1
+  const chunkServer1 = new ChunkServer("ID-1", masterServer)
 
-    const sourceFilePath = "sourceFile.md"
-    const masterServer = new MasterServer()
+  // First file to chunk and store
+  const sourceFilePath1 = "sourceFile.md"
+  chunkServer1.chunk(sourceFilePath1).then( res => {
+    console.log("chunkServer1.chunk response = ", res)
     console.log("masterServer.filesCollection = ", masterServer.filesCollection) 
-    
-    const fileProcessor = new FileProcessor(sourceFilePath, 100, "chunks", masterServer)
-    fileProcessor.chunk().then(res => {
-      if(res.status) {
-        console.log("res.chunksInserted = ", res.chunksInserted)
-        console.log("res.chunksInserted.length = ", res.chunksInserted.length)
-        console.log("filesCollection = ", masterServer.filesCollection)
 
-        fileProcessor.read(masterServer.filesCollection[sourceFilePath])
-      }
-    })
-
-    // // Independently read chunks based on the state stored in "op logs"
-    // fileProcessor.read(masterServer.filesCollection[sourceFilePath])
+    // regenerate the file from chunks
+    chunkServer1.read(sourceFilePath1)
   })
-  
-  
+
 }
 
 main()
