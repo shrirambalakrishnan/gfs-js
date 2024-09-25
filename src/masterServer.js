@@ -13,9 +13,10 @@ class MasterServer {
     this.oplogFileName = `master-oplog-${this.serverId}`
     this.oplogFilePath = path.join(__dirname, this.oplogFileName)
     this.filesCollection = {}
+    this.chunkServers = []
 
-    // construct the filesCollection from OpLog if available.
-    this.loadFromOpLog();
+    // // construct the filesCollection from OpLog if available.
+    // this.loadFromOpLog();
   }
 
   logOperation(opLog) {
@@ -55,6 +56,27 @@ class MasterServer {
     });
 
     console.log("MASTER-SERVER-INIT-LOADING COMPLETED")
+  }
+
+  registerChunkServer(chunkServer) {
+    console.log("registering chunk server - ", chunkServer)
+    this.chunkServers.push( chunkServer )
+
+    console.log("this.chunkServers - ", this.chunkServers)
+  }
+
+  getChunkServers(numChunks) {
+    console.log("getChunkServers.numChunks = ", numChunks)
+    
+    const chunkIndexToChunkServerMapping = {}
+
+    // use round-robin to assign chunks to chunk servers
+    for(let i = 0; i < numChunks; i++) {
+      const chunkServerIndexForCurrentChunk = i % this.chunkServers.length
+      chunkIndexToChunkServerMapping[ i ] = this.chunkServers[chunkServerIndexForCurrentChunk]
+    } 
+    
+    return chunkIndexToChunkServerMapping
   }
 }
 
