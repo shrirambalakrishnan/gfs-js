@@ -68,6 +68,10 @@ class ChunkServerV2 {
     })
     
   }
+
+  getChunkFilePath(chunkIdentifier) {
+    return path.join(__dirname, this.chunkDir, chunkIdentifier)
+  }
 }
 
 module.exports = {

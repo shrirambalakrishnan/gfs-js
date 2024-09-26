@@ -30,6 +30,8 @@ const main = () => {
 
       console.log("masterServer.filesCollection = ", masterServer.filesCollection)
       
+      client.readFile(sourceFilePath)
+      
     }
     
   })

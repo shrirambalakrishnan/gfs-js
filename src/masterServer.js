@@ -91,6 +91,14 @@ class MasterServer {
 
     return true
   }
+
+  getFileChunkDetails(fileId) {
+    return this.filesCollection[ fileId ]
+  }
+
+  getAllChunkServers() {
+    return this.chunkServers
+  }
 }
 
 module.exports = {
