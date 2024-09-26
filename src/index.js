@@ -24,7 +24,15 @@ const main = () => {
   // start file upload from client
   const sourceFileName = "sourceFile.md"
   const sourceFilePath = path.join(__dirname, sourceFileName)
-  client.storeFile(sourceFilePath)
+  client.storeFile(sourceFilePath).then( res => {
+
+    if( res.status ) {
+
+      console.log("masterServer.filesCollection = ", masterServer.filesCollection)
+      
+    }
+    
+  })
 }
 
 main()

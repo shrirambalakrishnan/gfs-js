@@ -78,6 +78,19 @@ class MasterServer {
     
     return chunkIndexToChunkServerMapping
   }
+
+  pushNewChunkData(fileId, chunkId, chunkServerId) {
+    if(! this.filesCollection[ fileId ]) {
+      this.filesCollection[ fileId ] = []
+    }
+    
+    this.filesCollection[ fileId ].push({
+      chunkId, 
+      chunkServerId
+    })
+
+    return true
+  }
 }
 
 module.exports = {

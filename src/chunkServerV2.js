@@ -42,8 +42,15 @@ class ChunkServerV2 {
               "chunkFilePath = ", chunkFilePath,
             )
             
-            const opLogString = `CHUNK_CREATED||${sourceFilePath}||${this.id}||${chunkIdentifier}||${chunkFilePath}\n`
-            this.masterServer.logOperation(opLogString)
+            // const opLogString = `CHUNK_CREATED||${sourceFilePath}||${this.id}||${chunkIdentifier}||${chunkFilePath}\n`
+            // this.masterServer.logOperation(opLogString)
+
+            // update master metadata
+            this.masterServer.pushNewChunkData(
+              sourceFilePath,
+              chunkIdentifier,
+              this.id
+            )
   
             fs.close(fd, (err) => {
               if(err) {
