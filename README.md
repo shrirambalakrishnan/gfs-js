@@ -4,5 +4,10 @@ Features
 - Master node
 - Chunk servers
 - GFS Client
-  - chunks data
-  - stores chunks in various chunk servers
+  - stores file in multiple chunks
+    - chunks data
+    - stores chunks in various chunk servers
+  - reads file
+    - gets chunk details from master
+    - reads chunk from chunk servers
+    - regenerates the file from chunks

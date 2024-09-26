@@ -4,3 +4,5 @@ src/chunk-server-*
 src/*-oplog-*
 
 node_modules
+
+src/regenerated_*
