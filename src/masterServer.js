@@ -15,8 +15,8 @@ class MasterServer {
     this.filesCollection = {}
     this.chunkServers = []
 
-    // // construct the filesCollection from OpLog if available.
-    // this.loadFromOpLog();
+    // construct the filesCollection from OpLog if available.
+    this.loadFromOpLog();
   }
 
   logOperation(opLog) {
@@ -32,30 +32,36 @@ class MasterServer {
 
     // OpLog is expected to be very small in size
     // Hence we can readFileSync in this case
-    const data = fs.readFileSync(this.oplogFilePath, "utf-8")//, (err, data) => {
+    const data = fs.readFileSync(this.oplogFilePath, "utf-8")
     console.log("loadFromOpLog.data = ", data)
     const operationLogs = data.split(/\n/)
     
     operationLogs.forEach(operationLog => {
-      
-      const operationDetails = operationLog.split("|")
+      const operationDetails = operationLog.split("||")
 
       const operation = operationDetails[0]
       const sourceFilePath = operationDetails[1]
-      const chunkOfFileIdentifier = operationDetails[2]
+      const chunkServerIdentifier = operationDetails[2]
+      const chunkIdentifier = operationDetails[3]
+
+      const chunkMetaData = {
+        chunkId: chunkIdentifier,
+        chunkServerId: chunkServerIdentifier,
+      }
 
       // simple conditional checks as the number of operations are very less
       if(operation == "CHUNK_CREATED") {
         if( this.filesCollection[ sourceFilePath ] ) {
-          this.filesCollection[ sourceFilePath ].push( chunkOfFileIdentifier )
+          this.filesCollection[ sourceFilePath ].push( chunkMetaData )
         } else {
-          this.filesCollection[ sourceFilePath ] = [ chunkOfFileIdentifier ]
+          this.filesCollection[ sourceFilePath ] = [ chunkMetaData ]
         }
       }
-      
     });
 
     console.log("MASTER-SERVER-INIT-LOADING COMPLETED")
+
+    return true
   }
 
   registerChunkServer(chunkServer) {

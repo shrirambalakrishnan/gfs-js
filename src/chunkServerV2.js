@@ -41,9 +41,9 @@ class ChunkServerV2 {
               "chunkIdentifier = ", chunkIdentifier,
               "chunkFilePath = ", chunkFilePath,
             )
-            
-            // const opLogString = `CHUNK_CREATED||${sourceFilePath}||${this.id}||${chunkIdentifier}||${chunkFilePath}\n`
-            // this.masterServer.logOperation(opLogString)
+
+            const opLogString = `CHUNK_CREATED||${sourceFilePath}||${this.id}||${chunkIdentifier}||${chunkFilePath}\n`
+            this.masterServer.logOperation(opLogString)
 
             // update master metadata
             this.masterServer.pushNewChunkData(
