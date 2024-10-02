@@ -105,6 +105,19 @@ class MasterServer {
   getAllChunkServers() {
     return this.chunkServers
   }
+
+  // Currently handling the scenario where the last chunk has space enough to
+  // append incoming data
+  getChunkServerToAppend(fileId) {
+
+    console.log("--------- getChunkServerToAppend")
+    console.log("fileId = ", fileId)
+    
+    const chunkLength = this.filesCollection[ fileId ].length
+    console.log("chunkLength = ", chunkLength)
+    
+    return this.filesCollection[fileId][ chunkLength - 1 ]
+  }
 }
 
 module.exports = {

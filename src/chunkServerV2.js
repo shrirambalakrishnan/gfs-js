@@ -1,12 +1,14 @@
 const fs = require("fs")
 const path = require("path")
 const { uuid } = require('uuidv4');
+const { Mutex } = require("./mutex")
 
 class ChunkServerV2 {
 
   constructor(id, masterServer) {
     this.id = id
     this.masterServer = masterServer
+    this.chunkLocks = {}
     this.chunkDir = `chunk-server-${this.id}`
 
     this.init()
@@ -71,6 +73,52 @@ class ChunkServerV2 {
 
   getChunkFilePath(chunkIdentifier) {
     return path.join(__dirname, this.chunkDir, chunkIdentifier)
+  }
+
+  appendToChunk(sourceFilePath, chunkIdentifier, chunkData) {
+    const chunkFileName = chunkIdentifier;
+    const chunkFilePath = path.join(__dirname, this.chunkDir, chunkFileName)
+
+    // lock the chunk before appending to it
+    let chunkLock = this.getChunkLock( chunkIdentifier )
+
+    chunkLock.acquireLock().then( res => {
+
+    fs.open(chunkFilePath, "a", (err, fd) => {
+      fs.appendFile(fd, chunkData, (error) => { 
+        if(error) {
+          console.log("error appending to file - ", chunkFilePath)
+        } else {
+
+          console.log(
+            "============================",
+            "APPEND TO CHUNK SUCCESSFULL ",
+            "sourceFilePath = ", sourceFilePath,
+            "chunkServerId = ", this.id,
+            "chunkIdentifier = ", chunkIdentifier,
+            "chunkFilePath = ", chunkFilePath,
+          )
+
+          const opLogString = `CHUNK_APPENDED||${sourceFilePath}||${this.id}||${chunkIdentifier}||${chunkFilePath}\n`
+          this.masterServer.logOperation(opLogString)
+
+            chunkLock.releaseLock()
+        }
+      })
+    })
+      
+    })
+    
+    
+  }
+
+  getChunkLock(chunkIdentifier) {
+
+    if( !this.chunkLocks[chunkIdentifier] ) {
+      this.chunkLocks[chunkIdentifier] = new Mutex()
+    }
+
+    return this.chunkLocks[chunkIdentifier]
   }
 }
 
