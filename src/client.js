@@ -101,6 +101,21 @@ class Client {
       })
     })
   }
+
+  appendToFile(filePath, data) {
+    const chunkServerDetail = this.master.getChunkServerToAppend(filePath)
+    const chunkServerId = chunkServerDetail.chunkServerId
+    const chunkId = chunkServerDetail.chunkId
+
+    const allChunkServers = this.master.getAllChunkServers()
+    const chunkServer = allChunkServers.find(_ => _.id == chunkServerId)
+    
+    chunkServer.appendToChunk(
+      filePath,
+      chunkId,
+      data,
+    )
+  }
 }
 
 module.exports = {

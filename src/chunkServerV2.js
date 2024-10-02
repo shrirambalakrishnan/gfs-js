@@ -72,6 +72,32 @@ class ChunkServerV2 {
   getChunkFilePath(chunkIdentifier) {
     return path.join(__dirname, this.chunkDir, chunkIdentifier)
   }
+
+  appendToChunk(sourceFilePath, chunkIdentifier, chunkData) {
+    const chunkFileName = chunkIdentifier;
+    const chunkFilePath = path.join(__dirname, this.chunkDir, chunkFileName)
+
+    fs.open(chunkFilePath, "a", (err, fd) => {
+      fs.appendFile(fd, chunkData, (error) => { 
+        if(error) {
+          console.log("error appending to file - ", chunkFilePath)
+        } else {
+
+          console.log(
+            "============================",
+            "APPEND TO CHUNK SUCCESSFULL ",
+            "sourceFilePath = ", sourceFilePath,
+            "chunkServerId = ", this.id,
+            "chunkIdentifier = ", chunkIdentifier,
+            "chunkFilePath = ", chunkFilePath,
+          )
+
+          const opLogString = `CHUNK_APPENDED||${sourceFilePath}||${this.id}||${chunkIdentifier}||${chunkFilePath}\n`
+          this.masterServer.logOperation(opLogString)
+        }
+      })
+    })
+  }
 }
 
 module.exports = {
